@@ -1,5 +1,6 @@
 from pygame import *
 from random import seed ,randint
+from datetime import datetime
 
 #?  Global Variables
 # topWalls = []
@@ -82,8 +83,21 @@ Running = True
 Alive = False
 Collision = False
 bestScore = 0
+
 while Running:      #?  Main loop
     
+    topWalls = []
+    botWalls = []
+    startTime = None
+
+    #?  Physics variables
+    g = -60
+    iv = 50
+    jv = 100
+    dt = 0.05
+    gap = 100
+    disp = 0
+    interval = [1,500000]
 
     eventList = event.get()
     for stuff in eventList:
@@ -115,21 +129,12 @@ while Running:      #?  Main loop
                 # print("You are alive!")
                 seed(None)
                 Alive = True
-
-                topWalls = []
-                botWalls = []
-
-                #?  Physics variables
-                g = -60
-                iv = 50
-                jv = 100
-                dt = 0.05
-                gap = 100
-                disp = 0
-                interval = 140
+                startTime = datetime.now()
+                genWallTime = datetime.now()
                 generate_wall(gap)
 
     counter = 0
+    update = False
     while Alive:    #?  Jumping loop
 
         eventList = event.get()
@@ -149,28 +154,44 @@ while Running:      #?  Main loop
                 if stuff.key == K_SPACE:
                     # print("Jump!")
                     iv = jv
-    
 
-        # if counter%interval == 0:
-        if len(topWalls) < 1:
+        sfhljh = datetime.now() - genWallTime
+        if sfhljh.seconds >= interval[0] and sfhljh.microseconds >= interval[1]:
+        # if len(topWalls) < 1:
+            genWallTime = datetime.now()
             generate_wall(gap)
-        if counter < 4:
+        
+        if not update and counter == 2:
             gap = 90
-        elif counter < 10:
+            update = True
+            print(counter, interval)
+        elif update and counter == 5:
             g = -80
             jv = 120
-        elif counter < 20:
+            update = False
+            interval[1] = 250000
+            print(counter, interval)
+        elif not update and counter == 10:
             gap = 85
-        elif counter < 30:
-            g = -100 
+            interval[1] = 100000
+            update = True
+            print(counter, interval)
+        elif update and counter == 15:
+            g = -100  
             jv = 150
-        elif counter < 40:
+            update = False
+            interval = [1, 0]
+            print(counter, interval)
+        elif not update and counter == 20:
             gap = 80
-        elif counter < 60:
+            update = True
+            interval = [0, 900000]
+            print(counter, interval)
+        elif update and counter == 25:
             gap = 75
-            
-             
-
+            update = False
+            interval[1] = 850000
+            print(counter, interval)
 
         if Collision:
             wordScroll("You died!")
@@ -204,12 +225,10 @@ while Running:      #?  Main loop
 
             Screen.blit(bg,(0,0))
 
-            distance_message = font1.render(f"Score: {counter}",False,"Black")
-            distance_rect   = distance_message.get_rect(center=(screenSize.x/2,50))
-            Screen.blit(distance_message,distance_rect)
+            
 
             draw.rect(Screen,"Black",end_rect,5)
-            if topWalls[0].colliderect(end_rect):
+            if topWalls and topWalls[0].colliderect(end_rect):
                     topWalls.pop(0)
                     botWalls.pop(0)
                     counter += 1
@@ -227,6 +246,10 @@ while Running:      #?  Main loop
 
             if square.colliderect(Ceiling) or square.colliderect(Ground):
                 Collision = True
+
+            distance_message = font1.render(f"Score: {counter}",False,"White")
+            distance_rect   = distance_message.get_rect(center=(screenSize.x/2,50))
+            Screen.blit(distance_message,distance_rect)
 
             square = draw.rect(Screen,"blue",square,5,5)
             draw.rect(Screen,"black",Ground)
